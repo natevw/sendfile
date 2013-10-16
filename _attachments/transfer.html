@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Send files by IP Calf</title>
+    <script src="pouchdb-nightly.js"></script>
+    <script src="pouch.webrtc.js"></script>
+    <script src="http://d3js.org/queue.v1.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <style>
+        /* HT http://nicolasgallagher.com/micro-clearfix-hack/demo/ */
+        body {
+            font-family: sans-serif;
+            width: 575px;
+            margin: 10px auto;
+        }
+        header {
+            text-align: center;
+        }
+        h1 { margin-bottom: 0; }
+        
+        .peer h2 {
+            position: relative;
+            top: 2em; left: -0.5ex;
+            z-index: 2;
+            
+            
+            border: 1px solid grey; border-radius: 3px;
+            background: #fbfbfc; width: 10ex;
+            text-align: center;
+        }
+        
+        .wrapper {
+            margin: 2em 0 0;
+            position: relative;
+            border: 2px solid #0d0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .disabled.wrapper {
+            border-color: gold;
+        }
+        .disabled.wrapper::before {
+            display: block;
+            position: absolute;
+            left: 0; right: 0;
+            top: 0; bottom: 0;
+            content: "";
+            z-index: 1;
+            background: lightgrey; opacity: 0.9;
+        }
+        .wrapper::after {
+            display: block;
+            content: "";
+            clear: both;
+        }
+        
+        .box {
+            border: 1px solid #0d0; border-radius: 10px;
+            float: left; display: inline;
+            width: 250px; height: 15em;
+            margin: 1em; text-align: center;
+        }
+        .box:empty::before {
+            position: relative; top: 3em;
+            color: grey;
+            font-size: larger; 
+            font-family: Gill Sans, sans-serif; letter-spacing: 0.15ex;
+            text-transform: uppercase;
+        }
+        .drop.box:empty::before {
+            content: "Drop file(s) here to send.";
+        }
+        .drag.box:empty::before {
+            content: "Drag received to save.";
+        }
+        
+        footer { text-align: left; margin-top: 3em; }
+        footer small { font-family: serif; font-style: italic; }
+    </style>
+</head>
+<body>
+<header>
+<h1>Send files</h1>
+<small>A service of <a href="http://ipcalf.com">IP Calf</a> —<br>
+for <a href="https://github.com/natevw/ipcalf#bonus">all</a> your IP address needs!℠</small>
+</header>
+
+<div class="peer">
+    <h2>127.0.0.1</h2>
+    <div class="wrapper disabled">
+        <div class="drop box"></div>
+        <div class="drag box"></div>
+    </div>
+    <pre>Waiting for connection…</pre>
+<div>
+
+<footer>
+<small>© 2013 Nathan Vander Wilt. Do good.
+</footer>
+</body>
+</html>
