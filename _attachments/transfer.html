@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Send files by IP Calf</title>
-    <script src="pouchdb-nightly.js"></script>
+    <script src="pouchdb-nightly.min.js"></script>
     <script src="pouch.webrtc.js"></script>
     <script src="http://d3js.org/queue.v1.min.js"></script>
     <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -98,5 +98,94 @@ for <a href="https://github.com/natevw/ipcalf#bonus">all</a> your IP address nee
 <footer>
 <small>© 2013 Nathan Vander Wilt. Do good.
 </footer>
+
+
+<script>
+
+// TODO: connect to hub, share initial database (don't display)
+//       reciprocate when peer connects (PeerPouch: expose notification!)
+//       share a new database in case someone else joins (how to 
+
+var HUB_URL = "http://peerpouch-test.ipcalf.com",
+    SHARE_BASE = "idb://pouch-temp-";
+
+
+function randId() {
+    return Math.random().toFixed(10).slice(2);
+}
+
+var freeShare = null,
+    stableName = 'name-'+randId(),
+    localSharesByPeer = Object.create(null),
+    remoteSharesByName = Object.create(null);
+
+function getArrayOfPeerPairs() {            // TODO: fails to match up, finish debugging
+    var pairs = [],
+        peersWeHaveOpen = Object.create(null);
+    Object.keys(remoteSharesByName).forEach(function (name) {
+        var remote = remoteSharesByName[name],
+            peer = remote.__peer,
+            local = localSharesByPeer[peer] || null;
+        peersWeHaveOpen[peer] = true;
+        pairs.push({remote:remote, local:local});
+    });
+    Object.keys(localSharesByPeer).forEach(function (peer) {
+        if (peer in peersWeHaveOpen) return;
+        var local = localSharesByPeer[peer];
+        pairs.push({remote:null, local:local});
+    });
+    return pairs;
+}
+
+
+function setupFreeShare(hub) {
+    freeShare = null;
+    PouchDB(SHARE_BASE+randId(), function (e,local) {
+        if (e) throw e;
+        hub.shareDatabase(local, {name:stableName, onRemote:function (evt) {
+            // could use this.remoteDescription.sdp
+            console.log("Remote opened our share", this);
+            localSharesByPeer[evt.peer] = freeShare;
+            setupFreeShare(hub);
+        }}, function (e,d) {
+            if (e) throw e;
+            window.addEventListener('beforeunload', function () {
+                hub.unshareDatabase(local, function () {
+                    location.reload();
+                });
+                return "HACK: will reload after share is cleaned up.";
+            }, false);
+        });
+        local.changes({since:'latest', continuous:true, onChange:function (chg) {
+            console.log("Local change", chg.id);
+        }});
+        freeShare = local;
+    });
+}
+
+PouchDB(HUB_URL, function (e,hub) {
+    if (e) throw e;
+    setupFreeShare(hub);
+    
+    function connectToShare(d) {
+        if (d.name in remoteSharesByName) return;
+        console.log("Trying to connect to", d.name, d);
+        PouchDB(d.dbname, function (e,remote) {
+            if (e) throw e;
+            console.log("Opened remote", remote);
+            remoteSharesByName[d.name] = remote;
+            remote.__peer = d._id;
+        });    
+    }
+    hub.getSharedDatabases({onChange:function (d) {
+        connectToShare(d);
+    }}, function (e,d) {
+        if (e) throw e;
+        if (d.length > 5) return console.warn("Too many shares, ignoring", d);
+        d.forEach(connectToShare);
+    });
+});
+
+</script>
 </body>
 </html>
