@@ -108,43 +108,40 @@ for <a href="https://github.com/natevw/ipcalf#bonus">all</a> your IP address nee
 var HUB_URL = "http://peerpouch-test.ipcalf.com",
     SHARE_BASE = "idb://pouch-temp-";
 
-
 function randId() {
     return Math.random().toFixed(10).slice(2);
 }
 
 var freeShare = null,
-    stableName = 'name-'+randId(),
-    localSharesByPeer = Object.create(null),
+    stableInfo = {name:'name-'+randId()},
+    localSharesByName = Object.create(null),
     remoteSharesByName = Object.create(null);
 
 function getArrayOfPeerPairs() {            // TODO: fails to match up, finish debugging
     var pairs = [],
-        peersWeHaveOpen = Object.create(null);
+        namesWeHaveOpen = Object.create(null);
     Object.keys(remoteSharesByName).forEach(function (name) {
         var remote = remoteSharesByName[name],
-            peer = remote.__peer,
-            local = localSharesByPeer[peer] || null;
-        peersWeHaveOpen[peer] = true;
-        pairs.push({remote:remote, local:local});
+            local = localSharesByName[name] || null;
+        namesWeHaveOpen[name] = true;
+        pairs.push({name:name, remote:remote, local:local});
     });
-    Object.keys(localSharesByPeer).forEach(function (peer) {
-        if (peer in peersWeHaveOpen) return;
-        var local = localSharesByPeer[peer];
-        pairs.push({remote:null, local:local});
+    Object.keys(localSharesByName).forEach(function (name) {
+        if (name in namesWeHaveOpen) return;
+        var local = localSharesByName[name];
+        pairs.push({name:name, remote:null, local:local});
     });
     return pairs;
 }
-
 
 function setupFreeShare(hub) {
     freeShare = null;
     PouchDB(SHARE_BASE+randId(), function (e,local) {
         if (e) throw e;
-        hub.shareDatabase(local, {name:stableName, onRemote:function (evt) {
+        hub.shareDatabase(local, {info:stableInfo, onRemote:function (evt) {
             // could use this.remoteDescription.sdp
             console.log("Remote opened our share", this);
-            localSharesByPeer[evt.peer] = freeShare;
+            localSharesByName[evt.info.name] = freeShare;
             setupFreeShare(hub);
         }}, function (e,d) {
             if (e) throw e;
@@ -167,14 +164,14 @@ PouchDB(HUB_URL, function (e,hub) {
     setupFreeShare(hub);
     
     function connectToShare(d) {
-        if (d.name in remoteSharesByName) return;
-        console.log("Trying to connect to", d.name, d);
-        PouchDB(d.dbname, function (e,remote) {
+        var name = d.info.name;     // NOTE: not using d.name
+        if (name in remoteSharesByName) return;
+        console.log("Trying to connect to", name, d);
+        PouchDB(d.dbname, {info:stableInfo}, function (e,remote) {
             if (e) throw e;
             console.log("Opened remote", remote);
-            remoteSharesByName[d.name] = remote;
-            remote.__peer = d._id;
-        });    
+            remoteSharesByName[name] = remote;
+        });
     }
     hub.getSharedDatabases({onChange:function (d) {
         connectToShare(d);
