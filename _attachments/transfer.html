@@ -23,7 +23,6 @@
             top: 2em; left: -0.5ex;
             z-index: 2;
             
-            
             border: 1px solid grey; border-radius: 3px;
             background: #fbfbfc; width: 20ex;
             text-align: center;
@@ -120,16 +119,23 @@ var freeShare = null,
     stableInfo = {name:'name-'+randId()},
     localSharesByName = Object.create(null),
     remoteSharesByName = Object.create(null);
+    
+function installDB(sel) {}
 
 function updateDisplay() {
     var pairs = getArrayOfPeerPairs();
     d3.select('.peers').selectAll('.peer').data(pairs, function (d) { return d.name; }).call(function (sel) {
         sel.enter().append('div').classed('peer', true).call(function (sel) {
             sel.append('h2').text(function (d) { return d.name; });
-            sel.append('div').classed('drop', true).classed('box', true);
-            sel.append('div').classed('drag', true).classed('box', true);
+            sel.append('div').classed('wrapper', true);
         });
-        //sel.exit().remove
+        sel.select('.wrapper').selectAll('.drop.box').data(function (d) { return [d.remote]; }).call(function (sel) {
+            sel.enter().append('div').classed('drop', true).classed('box', true).call(installDB);
+        });
+        sel.select('.wrapper').selectAll('.drag.box').data(function (d) { return [d.remote]; }).call(function (sel) {
+            sel.enter().append('div').classed('drag', true).classed('box', true).call(installDB);
+        });
+        sel.exit().remove();
     });
 }
 
