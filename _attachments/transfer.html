@@ -25,7 +25,7 @@
             
             
             border: 1px solid grey; border-radius: 3px;
-            background: #fbfbfc; width: 10ex;
+            background: #fbfbfc; width: 20ex;
             text-align: center;
         }
         
@@ -85,6 +85,9 @@
 for <a href="https://github.com/natevw/ipcalf#bonus">all</a> your IP address needs!℠</small>
 </header>
 
+<div class="peers"></div>
+
+<!--
 <div class="peer">
     <h2>127.0.0.1</h2>
     <div class="wrapper disabled">
@@ -93,6 +96,7 @@ for <a href="https://github.com/natevw/ipcalf#bonus">all</a> your IP address nee
     </div>
     <pre>Waiting for connection…</pre>
 <div>
+-->
 
 <footer>
 <small>© 2013 Nathan Vander Wilt. Do good.
@@ -116,6 +120,18 @@ var freeShare = null,
     stableInfo = {name:'name-'+randId()},
     localSharesByName = Object.create(null),
     remoteSharesByName = Object.create(null);
+
+function updateDisplay() {
+    var pairs = getArrayOfPeerPairs();
+    d3.select('.peers').selectAll('.peer').data(pairs, function (d) { return d.name; }).call(function (sel) {
+        sel.enter().append('div').classed('peer', true).call(function (sel) {
+            sel.append('h2').text(function (d) { return d.name; });
+            sel.append('div').classed('drop', true).classed('box', true);
+            sel.append('div').classed('drag', true).classed('box', true);
+        });
+        //sel.exit().remove
+    });
+}
 
 function getArrayOfPeerPairs() {            // TODO: fails to match up, finish debugging
     var pairs = [],
@@ -143,6 +159,7 @@ function setupFreeShare(hub) {
             console.log("Remote opened our share", this);
             localSharesByName[evt.info.name] = freeShare;
             setupFreeShare(hub);
+            updateDisplay();
         }}, function (e,d) {
             if (e) throw e;
             window.addEventListener('beforeunload', function () {
@@ -171,6 +188,7 @@ PouchDB(HUB_URL, function (e,hub) {
             if (e) throw e;
             console.log("Opened remote", remote);
             remoteSharesByName[name] = remote;
+            updateDisplay();
         });
     }
     hub.getSharedDatabases({onChange:function (d) {
