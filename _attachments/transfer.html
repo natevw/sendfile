@@ -136,17 +136,22 @@ function installDB(sel) {
         });
         d3.event.preventDefault();
     });
-    sel.each(function () {
-        console.log(this, arguments);
-    });
     
-    /*
     sel.each(function (db) {
+        var sel = d3.select(this);
         db.changes({include_docs:true, continuous:true, onChange:function (change) {
             console.log('got change', change);
+            
+            var doc = change.doc,
+                atts = doc._attachments || {};
+            Object.keys(atts).forEach(function (name) {
+                db.getAttachment(doc._id, name, function (e,d) {
+                    if (e) consle.error("Couldn't fetch attachment", doc._id, name, e);
+                    else sel.append('a').attr('href', URL.createObjectURL(d)).attr('download', name).text(name);
+                });
+            });
         }});
     });
-    */
 }
 
 function updateDisplay() {
@@ -197,8 +202,7 @@ function setupFreeShare(hub) {
             setupFreeShare(hub);
             updateDisplay();
         }}, function (e,d) {
-            if (e) throw e;
-            
+            if (e) throw e;            
         });
         local.changes({since:'latest', continuous:true, onChange:function (chg) {
             console.log("Local change", chg.id);
