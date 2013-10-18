@@ -125,11 +125,11 @@ function installDB(sel) {
     sel.on('drop', function (db) {
         var drop = d3.event.dataTransfer,
             files = [].slice.call(drop.files);
-        console.log("DROPPED", files, db);
         files.forEach(function (file) {
             window.dbgFile = file;
             window.dbgDB = db;
-            db.putAttachment('file-'+randId(), 'file', file, file.type, function (e,d) {
+            console.log("DROPPED FILE", file);
+            db.putAttachment('file-'+randId(), file.name, file, file.type, function (e,d) {
                 if (e) console.error("File upload failed.", e);
                 else console.log("Uploaded file", d);
             });
@@ -145,9 +145,17 @@ function installDB(sel) {
             var doc = change.doc,
                 atts = doc._attachments || {};
             Object.keys(atts).forEach(function (name) {
+                var type = atts[name].content_type;
                 db.getAttachment(doc._id, name, function (e,d) {
-                    if (e) consle.error("Couldn't fetch attachment", doc._id, name, e);
-                    else sel.append('a').attr('href', URL.createObjectURL(d)).attr('download', name).text(name);
+                    if (e) return console.error("Couldn't fetch attachment", doc._id, name, e);
+                    var url = URL.createObjectURL(d);
+                    sel.append('a').attr('href', url).attr('download', name).text(name).call(function (sel) {
+                        sel.on('dragstart', function () {
+                            console.log("STARTING DRAG", type,name,url);
+                            // see http://www.thecssninja.com/javascript/gmail-dragout
+                            d3.event.dataTransfer.setData("DownloadURL", [type, name, url].join(':'));
+                        });
+                    });
                 });
             });
         }});
