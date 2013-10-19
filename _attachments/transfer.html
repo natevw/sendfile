@@ -99,7 +99,7 @@ You are: <span class=localName></span>
 //       reciprocate when peer connects (PeerPouch: expose notification!)
 //       share a new database in case someone else joins (how to 
 
-var HUB_URL = "http://peerpouch-test.ipcalf.com",
+var HUB_URL = (location.protocol === 'file:') ? "http://peerpouch-test.ipcalf.com" : (location.href + "/../../../"),
     SHARE_BASE = "idb://pouch-temp-";
 
 function randId() {
