@@ -162,7 +162,7 @@ function installDB(sel) {
                 db.getAttachment(doc._id, name, function (e,d) {
                     if (e) return console.error("Couldn't fetch attachment", doc._id, name, e);
                     var url = URL.createObjectURL(d);
-                    sel.append('li').text(name).on('dragstart', function () {
+                    sel.append('li').attr('draggable', "true").text(name).on('dragstart', function () {
                         console.log("STARTING DRAG", type,name,url);
                         // see http://www.thecssninja.com/javascript/gmail-dragout
                         d3.event.dataTransfer.setData("DownloadURL", [type, name, url].join(':'));
