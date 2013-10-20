@@ -58,6 +58,10 @@
             float: left; display: inline;
             width: 250px; height: 15em;
             margin: 1em; text-align: center;
+            overflow: hidden;
+            
+            list-style-type: none;
+            padding: 0;
         }
         .box:empty::before {
             position: relative; top: 3em;
@@ -65,6 +69,15 @@
             font-size: larger; 
             font-family: Gill Sans, sans-serif; letter-spacing: 0.15ex;
             text-transform: uppercase;
+        }
+        .box li {
+            background: #ededed;
+            margin: 1em 2em;
+            padding: 0.5em 1em;
+            cursor: pointer;
+        }
+        .box li a {
+            margin-left: 1ex;
         }
         .drop.box:empty::before {
             content: "Drop file(s) here to send.";
@@ -149,13 +162,11 @@ function installDB(sel) {
                 db.getAttachment(doc._id, name, function (e,d) {
                     if (e) return console.error("Couldn't fetch attachment", doc._id, name, e);
                     var url = URL.createObjectURL(d);
-                    sel.append('a').attr('href', url).attr('download', name).text(name).call(function (sel) {
-                        sel.on('dragstart', function () {
-                            console.log("STARTING DRAG", type,name,url);
-                            // see http://www.thecssninja.com/javascript/gmail-dragout
-                            d3.event.dataTransfer.setData("DownloadURL", [type, name, url].join(':'));
-                        });
-                    });
+                    sel.append('li').text(name).on('dragstart', function () {
+                        console.log("STARTING DRAG", type,name,url);
+                        // see http://www.thecssninja.com/javascript/gmail-dragout
+                        d3.event.dataTransfer.setData("DownloadURL", [type, name, url].join(':'));
+                    }).append('a').attr('href', url).attr('download', name).text('download');
                 });
             });
         }});
@@ -170,10 +181,10 @@ function updateDisplay() {
             sel.append('div').classed('wrapper', true);
         });
         sel.select('.wrapper').selectAll('.drop.box').data(function (d) { return (d.remote) ? [d.remote] : []; }).call(function (sel) {
-            sel.enter().insert('div', ".drag").classed('drop', true).classed('box', true).call(installDB);
+            sel.enter().insert('ul', ".drag").classed('drop', true).classed('box', true).call(installDB);
         });
         sel.select('.wrapper').selectAll('.drag.box').data(function (d) { return (d.local) ? [d.local] : []; }).call(function (sel) {
-            sel.enter().append('div').classed('drag', true).classed('box', true).call(installDB);
+            sel.enter().append('ul').classed('drag', true).classed('box', true).call(installDB);
         });
         sel.exit().remove();
     });
